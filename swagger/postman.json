@@ -1,0 +1,94 @@
+{
+  "info": {
+    "name": "Thiqah Booking API",
+    "_postman_id": "9c1f4e1b-1a3a-4a8b-bbb1-abcde1234567",
+    "description": "API collection for Thiqah Booking System — booking, cancel, check-in, and driver cancel endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Book a Seat",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tripId\": \"670a91fe3e2b0c1b67b6a8f1\",\n  \"seatNumber\": 5\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/bookings/book",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "bookings", "book"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cancel Booking (User)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bookingId\": \"670a932fe6b8d015df07a19d\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/bookings/cancel",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "bookings", "cancel"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check-In",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bookingId\": \"670a932fe6b8d015df07a19d\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/bookings/checkin",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "bookings", "checkin"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Driver Cancel Trip",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tripId\": \"670a91fe3e2b0c1b67b6a8f1\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/bookings/driver-cancel",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "bookings", "driver-cancel"]
+        }
+      },
+      "response": []
+    }
+  ]
+}

@@ -1,0 +1,368 @@
+openapi: 3.1.0
+info:
+  title: Theqa App API
+  version: 1.0.0
+  description: Express + Supabase + Coins & QR system
+servers:
+  - url: http://localhost:3000
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+  /api/auth/register:
+    post:
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, password]
+              properties:
+                phone:
+                  $ref: '#/components/schemas/EgyptPhone'
+                password: { type: string, format: password }
+      responses:
+        '201':
+          description: Created with tokens or message
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/TokenResponse'
+                  - $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/login:
+    post:
+      summary: Login and get JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, password]
+              properties:
+                phone:
+                  $ref: '#/components/schemas/EgyptPhone'
+                password: { type: string, format: password }
+      responses:
+        '200':
+          description: Tokens returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/update-profile:
+    put:
+      summary: Update current user profile
+      description: Updates fields in the `users` table for the authenticated user.
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateProfileResponse'
+        '400':
+          description: Invalid token or payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/trips:
+    get:
+      summary: List trips
+      security: [ { bearerAuth: [] } ]
+      responses:
+        '200':
+          description: List of trips
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripList'
+    post:
+      summary: Create trip
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTripRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trip:
+                    $ref: '#/components/schemas/Trip'
+  /api/trips/{id}/capacity:
+    get:
+      summary: Get capacity info for trip
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Capacity details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapacityResponse'
+        '404':
+          description: Trip not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/bookings:
+    post:
+      summary: Create booking and return QR
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        '201':
+          description: Booking created with QR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingWithQrResponse'
+        '400':
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/bookings/{id}/cancel:
+    post:
+      summary: Cancel booking and refund 1 coin
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelBookingResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/wallet/balance:
+    get:
+      summary: Get wallet balance
+      security: [ { bearerAuth: [] } ]
+      responses:
+        '200':
+          description: Balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+  /api/wallet/topup:
+    post:
+      summary: Top up wallet
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopupRequest'
+      responses:
+        '200':
+          description: New balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    EgyptPhone:
+      type: string
+      description: Egyptian mobile number normalized to +20XXXXXXXXXX
+      pattern: '^\\+20(10|11|12|15)\\d{8}$'
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+          nullable: true
+        expires_in:
+          type: integer
+        token_type:
+          type: string
+        user:
+          type: object
+          properties:
+            id: { type: string }
+            phone:
+              $ref: '#/components/schemas/EgyptPhone'
+            name: { type: string }
+    Trip:
+      type: object
+      properties:
+        id: { type: string }
+        route_name: { type: string }
+        driver_id: { type: string }
+        time: { type: string }
+        capacity: { type: integer }
+    TripList:
+      type: object
+      properties:
+        trips:
+          type: array
+          items:
+            $ref: '#/components/schemas/Trip'
+    CreateTripRequest:
+      type: object
+      required: [route_name, driver_id, time, capacity]
+      properties:
+        route_name: { type: string }
+        driver_id: { type: string }
+        time: { type: string }
+        capacity: { type: integer }
+    CapacityResponse:
+      type: object
+      properties:
+        capacity: { type: integer }
+        booked: { type: integer }
+        remaining: { type: integer }
+    Booking:
+      type: object
+      properties:
+        id: { type: string }
+        trip_id: { type: string }
+        user_id: { type: string }
+        status: { type: string, enum: ['created', 'confirmed', 'cancelled'] }
+        coins_used: { type: integer }
+    CreateBookingRequest:
+      type: object
+      required: [trip_id]
+      properties:
+        trip_id: { type: string }
+    Qr:
+      type: object
+      properties:
+        payload:
+          type: object
+          description: Booking payload embedded in QR
+        signature:
+          type: string
+          description: HMAC SHA-256 signature
+    BookingWithQrResponse:
+      type: object
+      properties:
+        booking:
+          $ref: '#/components/schemas/Booking'
+        wallet:
+          type: object
+          properties:
+            balance_coins: { type: integer }
+        qr:
+          $ref: '#/components/schemas/Qr'
+    CancelBookingResponse:
+      type: object
+      properties:
+        booking:
+          $ref: '#/components/schemas/Booking'
+        wallet:
+          type: object
+          properties:
+            balance_coins: { type: integer }
+    BalanceResponse:
+      type: object
+      properties:
+        balance_coins:
+          type: integer
+    TopupRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          minimum: 1
+    UpdateProfileRequest:
+      type: object
+      description: Arbitrary fields to update in the `users` table for the current user.
+      additionalProperties: true
+    UpdateProfileResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: array
+          items:
+            type: object
+
